@@ -1,0 +1,127 @@
+.districts-picker{
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    font-size: 14px;
+    border:1px solid #c7d1e4;
+    border-radius: 5px;
+    position: relative;
+}
+.districts-picker:after{
+    content: '';
+    display: block;
+    width: 0;
+    height: 0;
+    border-width: 6px;
+    border-style: solid;
+    border-color: #c7d1e4 transparent transparent transparent;
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    margin-top: -3px;
+}
+.districts-picker.open:after{
+    border-color: transparent transparent #c7d1e4;
+    margin-top: -9px;
+}
+.districts-picker .select-items-col{            
+    padding-left: 5px;
+    overflow: hidden;
+}
+.districts-picker .select-items-col .select-item{
+    padding: 5px;
+    color: #333;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.districts-picker .select-items-col .select-item:hover{
+    background: #f1f8ff;
+}
+.districts-picker input{
+    opacity: 0 !important;
+    display: block;
+    height: 0 !important;
+    width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;    
+    position: absolute;
+    left: -9999;
+}
+.districts-picker-dropdown{
+    width: 100%;
+    height: auto;
+    box-sizing: border-box;
+    position: absolute;
+    left: 0;
+    background: #fff;
+    box-shadow: 0 1px 5px rgba(0,0,0,.5);
+    display: none;
+    z-index: 99;
+    margin-top: -1px;
+}
+.districts-picker.open .districts-picker-dropdown{
+    display: block !important;
+}
+.districts-picker .districts-picker-dropdown .districts-tab{
+    border-bottom: 1px solid #ccc;
+    background: #f0f0f0;
+    height: 34px;
+}
+.districts-picker .districts-picker-dropdown .districts-tab:after{
+    content: '';
+    display: block;
+    clear: both;
+}
+.districts-picker .districts-picker-dropdown .districts-tab a{
+    padding: 0 10px;
+    display: block;
+    float: left;
+    height: 35px;
+    line-height: 35px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-top: none;
+    border-left: none;    
+    margin-bottom: -1px;
+    color: #4d4d4d;
+    text-decoration: none;    
+    outline: 0;
+}
+.districts-picker .districts-picker-dropdown .districts-tab a.active{
+    border-bottom-color: #fff;
+    color: #46a4ff;
+    background: #fff;
+}
+.districts-picker .districts-picker-dropdown .districts-tab-content{
+    padding-left: 10px;       
+}
+.districts-picker .districts-picker-dropdown .districts-tab-content .dtc{            
+    max-height: 300px;
+    overflow: auto;     
+}
+.districts-picker .districts-picker-dropdown .districts-tab-content .province dt{
+    float: left;
+    width: 2.5em;
+    font-weight: 500;
+    line-height: 2;
+}
+.districts-picker .districts-picker-dropdown .districts-tab-content .province dd{
+    margin-left: 3em;
+}
+.districts-picker .districts-picker-dropdown .districts-tab-content dd{
+    margin-left: 0;
+}
+.districts-picker .districts-picker-dropdown .districts-tab-content dd span{
+    display: inline-block;
+    padding: 5px;
+    border-radius: 2px;
+    cursor: pointer;
+}
+.districts-picker .districts-picker-dropdown .districts-tab-content dd span:hover{
+    background-color: #f1f8ff;
+    color: #46a4ff;
+}
+.districts-picker .districts-picker-dropdown .districts-tab-content dd span.active{
+    background-color: #46a4ff;
+    color: #fff;
+}
