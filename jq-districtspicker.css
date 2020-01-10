@@ -27,6 +27,8 @@
 .districts-picker .select-items-col{            
     padding-left: 5px;
     overflow: hidden;
+    padding-right: 20px;
+    box-sizing: border-box;
 }
 .districts-picker .select-items-col .select-item{
     padding: 5px;

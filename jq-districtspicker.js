@@ -13,7 +13,8 @@
                     change:function(){}
                 },option)
                 return this.each(function() {
-                    var $element = $(this).clone(),
+                    var cd_data = window.chinese_districts_data,
+                        $element = $(this).clone(),
                         inputHeight = $element.height(),
                         $districtsPicker = $('<div class="districts-picker" style="height:'+inputHeight+'px;width:'+$element.width()+'px">'),
                         $selectItemsCol = $('<div class="select-items-col" style="line-height:'+inputHeight+'px;height:'+inputHeight+'px;">'),
@@ -21,11 +22,11 @@
                         $districtsTab = $('<div class="districts-tab"><a href="javascript:;" data-type="province" class="active">省份</a><a href="javascript:;" data-type="city">城市</a><a href="javascript:;" data-type="district">区/县名</a></div>'),
                         $districtsTabContent = $('<div class="districts-tab-content">'),
                         $tabContentProvince = $('<div class="province dtc" data-name="province">'),
-                        $tabContentCity = $('<div class="city dtc" data-name="city">').hide(),
-                        $tabContentDistrict = $('<div class="district dtc" data-name="district">').hide();
+                        $tabContentCity = $('<div class="city dtc" data-name="city" style="display: none;">'),
+                        $tabContentDistrict = $('<div class="district dtc" data-name="district" style="display: none;">');
 
                     $districtsPicker.append($selectItemsCol).append($districtsPickerDropdown.append($districtsTab).append($districtsTabContent.append($tabContentProvince).append($tabContentCity).append($tabContentDistrict))).append($element);
-                    var cd_data = window.chinese_districts_data
+                    
                     //加载区域-省
                     var activeProvinceCode = loadDistricts(cd_data['86'],$districtsTabContent,option.province,'province');
                     if(activeProvinceCode !== ''){
@@ -56,19 +57,19 @@
                     });
                     $districtsPicker.on('click',function(){
                         if($(this).hasClass('open')){
-                            $(this).removeClass('open')
+                            $(this).removeClass('open');
                         }else{
-                            $(this).addClass('open')
+                            $(this).addClass('open');
+                            $districtsTab.find('a[data-type="province"]').trigger('click');
                         }
                     });
                     $districtsTab.on('click','a',function(e,param){
                         e.stopPropagation();
                         $(this).addClass('active').siblings().removeClass('active');
-                        var type = $(this).data('type');
-                        var $nowel = $('.' + type);                      
+                        var type = $(this).data('type'),$nowel = $districtsTabContent.find('.'+type);                  
                         $nowel.show().siblings().hide();
                         $nowel.nextAll().empty();
-                        if(param !== undefined && param.isSelectItem){
+                        if(param !== undefined && param.isSelectItem === false){
                            return;
                         }
                         var typePrev = 'china';
@@ -77,18 +78,15 @@
                         }else if(type === 'city'){
                             typePrev = 'province'
                         }
-                        var $selectItemPrev = $selectItemsCol.find('span[data-type="'+typePrev+'"]');
-
-                        var $selectItem = $selectItemsCol.find('span[data-type="'+type+'"]');
-                        var code = typePrev === 'china'? '86':$selectItemPrev.attr('data-code');
+                        var $selectItemPrev = $selectItemsCol.find('span[data-type="'+typePrev+'"]'),
+                        $selectItem = $selectItemsCol.find('span[data-type="'+type+'"]'),
+                        code = typePrev === 'china'? '86':$selectItemPrev.attr('data-code');
                         
                         loadDistricts(cd_data[code],$districtsTabContent,$selectItem.text(),type);
                     });
                     $districtsTabContent.on('click','span',function(e){
                         e.stopPropagation();
-                        var code = $(this).data('code'),text = $(this).text(),
-                        $nc = $(this).parents('.dtc'),
-                        nowType = $nc.data('name');
+                        var code = $(this).data('code'),text = $(this).text(),$nc = $(this).parents('.dtc'),nowType = $nc.data('name');
                         if(typeof option.change === 'function'){
                             option.change({
                                 type:nowType,
@@ -103,20 +101,16 @@
                             $districtsPicker.removeClass('open');
                             return;
                         }
-
                         var nextType = $nc.next().data('name');
                         loadDistricts(cd_data[code],$districtsTabContent,text,nextType);                        
-                        $districtsTab.find('a[data-type="'+nextType+'"]').trigger('click',{
-                            isSelectItem:true
-                        });
+                        $districtsTab.find('a[data-type="'+nextType+'"]').trigger('click',{ isSelectItem:false });
                     });
                     $selectItemsCol.on('click','span.select-item',function(e){
                         e.stopPropagation();
-                        var type = $(this).data('type');
                         if(!$districtsPicker.hasClass('open')){
                             $districtsPicker.addClass('open');
+                            $districtsTab.find('a[data-type="'+$(this).data('type')+'"]').trigger('click');
                         }
-                        $districtsTab.find('a[data-type="'+type+'"]').trigger('click');
                     });
                     $(document).on('click',function(e){
                         var $target = $(e.target);
@@ -150,38 +144,25 @@
             $selectItemsCol.append($('<span class="select-item" data-type="'+type+'" data-code="'+code+'">').text(text));
         }
         function loadDistricts(jsonObj,$tabContent,activeValue,type){
-            var $col = $tabContent.find('div[data-name="'+type+'"]');
-            $col.empty();           
-            let activeCode = ''
-            let isArray = true;
-            var $dd2 = $('<dd>')
+            var $col = $tabContent.find('div[data-name="'+type+'"]'),activeCode = '',isArray = true,$dd2 = $('<dd>');
+            $col.empty();  
             for (var item in jsonObj){
-                var result = jsonObj[item];
-                var $dd = $('<dd>')
+                var result = jsonObj[item],$dd = $('<dd>');
                 if(result instanceof Array){
                     for(var i=0,leng=result.length;i<leng;i++){
-                        var ritem = result[i]
-                        var cls = activeValue === ritem.address?'active':''
-                        if(cls !== ''){
-                            activeCode = ritem.code
-                        }
-                        $dd.append($('<span class="'+cls+'" data-code="'+ritem.code+'">'+ritem.address+'</span>'))
+                        var ritem = result[i],cls = activeValue === ritem.address?'active':'';
+                        if(cls !== ''){ activeCode = ritem.code; }
+                        $dd.append($('<span class="'+cls+'" data-code="'+ritem.code+'">'+ritem.address+'</span>'));
                     }
                 }else{
-                    isArray = false;
-                    var cls = activeValue === result?'active':''
-                    if(cls !== ''){
-                        activeCode = item
-                    }
-                    $dd2.append($('<span class="'+cls+'" data-code="'+item+'">'+result+'</span>'))
+                    if(isArray){ isArray = false; }
+                    var cls = activeValue === result?'active':'';
+                    if(cls !== ''){ activeCode = item; }
+                    $dd2.append($('<span class="'+cls+'" data-code="'+item+'">'+result+'</span>'));
                 }
-                if(isArray){
-                    $col.append($('<dl>').append('<dt>'+item+'</dt>').append($dd));
-                }
+                if(isArray){ $col.append($('<dl>').append('<dt>'+item+'</dt>').append($dd)); }
             }
-            if(!isArray){
-                $col.append($('<dl>').append($dd2));
-            }
+            if(!isArray){ $col.append($('<dl>').append($dd2)); }
             return activeCode;
         }
         if (methods[method])
