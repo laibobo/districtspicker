@@ -27,19 +27,11 @@
 
                     $districtsPicker.append($selectItemsCol).append($districtsPickerDropdown.append($districtsTab).append($districtsTabContent.append($tabContentProvince).append($tabContentCity).append($tabContentDistrict))).append($element);
                     
-                    //加载区域-省
-                    var activeProvinceCode = loadDistricts(cd_data['86'],$districtsTabContent,option.province,'province');
+                    var activeProvinceCode = loadDistricts(cd_data['86'],$districtsPicker,option.province,'province');
                     if(activeProvinceCode !== ''){
-                        setSelctItem($districtsPicker,'province',activeProvinceCode,option.province)
-                        //加载区域-市
-                        var activeCityCode = loadDistricts(cd_data[activeProvinceCode],$districtsTabContent,option.city,'city');         
+                        var activeCityCode = loadDistricts(cd_data[activeProvinceCode],$districtsPicker,option.city,'city');         
                         if(activeCityCode !== ''){
-                            setSelctItem($districtsPicker,'city',activeCityCode,option.city);
-                            //加载区域-区/县
-                            var activeDCode = loadDistricts(cd_data[activeCityCode],$districtsTabContent,option.district,'district');
-                            if(activeDCode !== ''){
-                                setSelctItem($districtsPicker,'district',activeDCode,option.district);
-                            }
+                            loadDistricts(cd_data[activeCityCode],$districtsPicker,option.district,'district');
                         }
                     }
                     
@@ -69,9 +61,7 @@
                         var type = $(this).data('type'),$nowel = $districtsTabContent.find('.'+type);                  
                         $nowel.show().siblings().hide();
                         $nowel.nextAll().empty();
-                        if(param !== undefined && param.isSelectItem === false){
-                           return;
-                        }
+                        if(param !== undefined && param.isLoadDistricts === false){ return; }
                         var typePrev = 'china';
                         if(type === 'district'){
                             typePrev = 'city'
@@ -81,19 +71,18 @@
                         var $selectItemPrev = $selectItemsCol.find('span[data-type="'+typePrev+'"]'),
                         $selectItem = $selectItemsCol.find('span[data-type="'+type+'"]'),
                         code = typePrev === 'china'? '86':$selectItemPrev.attr('data-code');
-                        
-                        loadDistricts(cd_data[code],$districtsTabContent,$selectItem.text(),type);
+                        loadDistricts(cd_data[code],$districtsPicker,$selectItem.text(),type,{ isSelectItem:false });
                     });
                     $districtsTabContent.on('click','span',function(e){
                         e.stopPropagation();
-                        var code = $(this).data('code'),text = $(this).text(),$nc = $(this).parents('.dtc'),nowType = $nc.data('name');
+                        var addrCode = $(this).data('code'),addrText = $(this).text(),$nc = $(this).parents('.dtc'),nowType = $nc.data('name');
                         if(typeof option.change === 'function'){
                             option.change({
                                 type:nowType,
-                                value:text
+                                value:addrText
                             })
                         }
-                        setSelctItem($districtsPicker,nowType,code,text);
+                        setSelctItem($districtsPicker,nowType,addrCode,addrText);
                         $element.val($selectItemsCol.text().replace(/\//g,''));
                         $(this).parents('.dtc').find('span').removeClass('active');
                         $(this).addClass('active');
@@ -102,15 +91,15 @@
                             return;
                         }
                         var nextType = $nc.next().data('name');
-                        loadDistricts(cd_data[code],$districtsTabContent,text,nextType);                        
-                        $districtsTab.find('a[data-type="'+nextType+'"]').trigger('click',{ isSelectItem:false });
+                        loadDistricts(cd_data[addrCode],$districtsPicker,addrText,nextType,{ isSelectItem:false });                        
+                        $districtsTab.find('a[data-type="'+nextType+'"]').trigger('click',{ isLoadDistricts:false });
                     });
                     $selectItemsCol.on('click','span.select-item',function(e){
                         e.stopPropagation();
                         if(!$districtsPicker.hasClass('open')){
                             $districtsPicker.addClass('open');
-                            $districtsTab.find('a[data-type="'+$(this).data('type')+'"]').trigger('click');
                         }
+                        $districtsTab.find('a[data-type="'+$(this).data('type')+'"]').trigger('click');
                     });
                     $(document).on('click',function(e){
                         var $target = $(e.target);
@@ -128,42 +117,46 @@
                 })
             }
         }
-        function setSelctItem($districtsPicker,type,code,text){
-            var $selectItemsCol = $districtsPicker.find('.select-items-col'),$el = $selectItemsCol.find('span[data-type="'+type+'"]');
+        function setSelctItem($districtsPicker,addrType,addrCode,addrText){
+            var $selectItemsCol = $districtsPicker.find('.select-items-col'),$el = $selectItemsCol.find('span[data-type="'+addrType+'"]');
             if($el.length > 0){
-                $el.text(text).attr('data-code',code);
+                $el.text(addrText).attr('data-code',addrCode);
                 var $nextAll = $el.nextAll();
                 if($nextAll.length > 0){
                     $nextAll.remove();
                 }
                 return;
             }
-            if(type === 'district' || type === 'city'){
+            if(addrType === 'district' || addrType === 'city'){
                 $selectItemsCol.append($('<b style="color:#333;font-weight: 400;"></b>').text('/'));
             }
-            $selectItemsCol.append($('<span class="select-item" data-type="'+type+'" data-code="'+code+'">').text(text));
+            $selectItemsCol.append($('<span class="select-item" data-type="'+addrType+'" data-code="'+addrCode+'">').text(addrText));
         }
-        function loadDistricts(jsonObj,$tabContent,activeValue,type){
-            var $col = $tabContent.find('div[data-name="'+type+'"]'),activeCode = '',isArray = true,$dd2 = $('<dd>');
+        function loadDistricts(jsonObj,$districtsPicker,activeAddr,addrType,param){
+            var $col = $districtsPicker.find('div.dtc[data-name="'+addrType+'"]'),activeAddrCode = '',isArray = true,$dd2 = $('<dd>');
             $col.empty();  
             for (var item in jsonObj){
                 var result = jsonObj[item],$dd = $('<dd>');
                 if(result instanceof Array){
                     for(var i=0,leng=result.length;i<leng;i++){
-                        var ritem = result[i],cls = activeValue === ritem.address?'active':'';
-                        if(cls !== ''){ activeCode = ritem.code; }
+                        var ritem = result[i],cls = activeAddr === ritem.address?'active':'';
+                        if(cls !== ''){ activeAddrCode = ritem.code; }
                         $dd.append($('<span class="'+cls+'" data-code="'+ritem.code+'">'+ritem.address+'</span>'));
                     }
                 }else{
                     if(isArray){ isArray = false; }
-                    var cls = activeValue === result?'active':'';
-                    if(cls !== ''){ activeCode = item; }
+                    var cls = activeAddr === result?'active':'';
+                    if(cls !== ''){ activeAddrCode = item; }
                     $dd2.append($('<span class="'+cls+'" data-code="'+item+'">'+result+'</span>'));
                 }
                 if(isArray){ $col.append($('<dl>').append('<dt>'+item+'</dt>').append($dd)); }
             }
             if(!isArray){ $col.append($('<dl>').append($dd2)); }
-            return activeCode;
+            if(param && param.isSelectItem === false){  return; }
+            if(activeAddrCode){
+                setSelctItem($districtsPicker,addrType,activeAddrCode,activeAddr);
+            }
+            return activeAddrCode;
         }
         if (methods[method])
             return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
